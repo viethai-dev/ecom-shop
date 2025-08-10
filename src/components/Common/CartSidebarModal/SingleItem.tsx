@@ -1,6 +1,6 @@
 import React from "react";
 import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/redux/store";
+import { AppDispatch } from "@/lib/store";
 import Image from "next/image";
 
 const SingleItem = ({ item, removeItemFromCart }) => {

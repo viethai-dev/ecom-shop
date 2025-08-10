@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Breadcrumb from "../Common/Breadcrumb";
-import { useAppSelector } from "@/redux/store";
+import { useAppSelector } from "@/lib/store";
 import SingleItem from "./SingleItem";
 
 export const Wishlist = () => {

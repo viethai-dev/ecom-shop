@@ -1,8 +1,49 @@
+'use client'
+
+import { signIn } from "@/api/user";
 import Breadcrumb from "@/components/Common/Breadcrumb";
+import { signInFailure, signInStart, signInSuccess } from "@/lib/features/auth/authSlice";
+import { selectAuthError, selectAuthHydrated, selectAuthStatus, selectAuthToken } from "@/lib/features/auth/selectors";
+import { useAppSelector } from "@/lib/store";
 import Link from "next/link";
-import React from "react";
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import * as userAPI from '@/api/user'
 
 const Signin = () => {
+  const dispatch = useDispatch()
+  const [formData, setFormData] = useState({ email: '', password: '' })
+  const status = useAppSelector(selectAuthStatus)
+  const errorFromStore = useAppSelector(selectAuthError)
+  const router = useRouter()
+
+  const handleChange = (e: any) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault()
+    if (!formData.email || !formData.password) {
+      dispatch(signInFailure('Please enter email and password.'))
+      return
+    }
+    try {
+      dispatch(signInStart())
+      const res: any = await userAPI.signIn({ ...formData })
+      if (!res?.data?.accessToken) throw new Error('Invalid Token.')
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('access_token', res?.data?.accessToken)
+        if (res?.data?.user) localStorage.setItem('user', JSON.stringify(res?.data?.user))
+      }
+      dispatch(signInSuccess({ token: res?.data?.accessToken, user: res?.data?.user || null }))
+      router.push('/')
+    } catch (err: any) {
+      dispatch(signInFailure(err?.message || 'Login failed.'))
+    }
+  }
+
   return (
     <>
       <Breadcrumb title={"Signin"} pages={["Signin"]} />
@@ -17,13 +58,16 @@ const Signin = () => {
             </div>
 
             <div>
-              <form>
+              <form onSubmit={handleSubmit}>
                 <div className="mb-5">
                   <label htmlFor="email" className="block mb-2.5">
                     Email
                   </label>
 
                   <input
+                    required
+                    onChange={handleChange}
+                    value={formData.email}
                     type="email"
                     name="email"
                     id="email"
@@ -38,6 +82,9 @@ const Signin = () => {
                   </label>
 
                   <input
+                    required
+                    onChange={handleChange}
+                    value={formData.password}
                     type="password"
                     name="password"
                     id="password"
@@ -46,12 +93,21 @@ const Signin = () => {
                     className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                   />
                 </div>
-
+                {errorFromStore && (
+                  <div className="mt-6 rounded-lg border border-red-light-3 bg-red-light-6 px-4 py-3 text-sm text-red">
+                    <div className="flex">
+                      <svg className="h-4 w-4 text-red-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="ml-2">{errorFromStore}</span>
+                    </div>
+                  </div>
+                )}
                 <button
-                  type="submit"
-                  className="w-full flex justify-center font-medium text-white bg-dark py-3 px-6 rounded-lg ease-out duration-200 hover:bg-blue mt-7.5"
+                  disabled={status === 'loading'}
+                  className="w-full flex justify-center font-medium text-white bg-dark py-3 px-6 rounded-lg ease-out duration-200 hover:bg-blue mt-7.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Sign in to account
+                  {status === 'loading' ? 'Signing in...' : 'Sign in to account'}
                 </button>
 
                 <a
