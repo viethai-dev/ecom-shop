@@ -6,7 +6,7 @@ import "swiper/css";
 import Image from "next/image";
 
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
-import { useAppSelector } from "@/redux/store";
+import { useAppSelector } from "@/lib/store";
 
 const PreviewSliderModal = () => {
   const { closePreviewModal, isModalPreviewOpen } = usePreviewSlider();
@@ -27,9 +27,8 @@ const PreviewSliderModal = () => {
 
   return (
     <div
-      className={`preview-slider w-full h-screen  z-999999 inset-0 flex justify-center items-center bg-[#000000F2] bg-opacity-70 ${
-        isModalPreviewOpen ? "fixed" : "hidden"
-      }`}
+      className={`preview-slider w-full h-screen  z-999999 inset-0 flex justify-center items-center bg-[#000000F2] bg-opacity-70 ${isModalPreviewOpen ? "fixed" : "hidden"
+        }`}
     >
       <button
         onClick={() => closePreviewModal()}

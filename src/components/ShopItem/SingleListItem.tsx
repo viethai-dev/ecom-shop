@@ -3,11 +3,11 @@ import React from "react";
 
 import { Product } from "@/types/product";
 import { useModalContext } from "@/app/context/QuickViewModalContext";
-import { updateQuickView } from "@/redux/features/quickView-slice";
-import { addItemToCart } from "@/redux/features/cart-slice";
-import { addItemToWishlist } from "@/redux/features/wishlist-slice";
+import { updateQuickView } from "@/lib/features/quickView-slice";
+import { addItemToCart } from "@/lib/features/cart-slice";
+import { addItemToWishlist } from "@/lib/features/wishlist-slice";
 import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/redux/store";
+import { AppDispatch } from "@/lib/store";
 import Link from "next/link";
 import Image from "next/image";
 

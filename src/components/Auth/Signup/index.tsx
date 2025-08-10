@@ -1,8 +1,92 @@
+"use client"
+
 import Breadcrumb from "@/components/Common/Breadcrumb";
+import { signUpFailure, signUpStart, signUpSuccess } from "@/lib/features/auth/authSlice";
+import { selectAuthError, selectAuthHydrated, selectAuthStatus, selectAuthToken } from "@/lib/features/auth/selectors";
+import { useAppSelector } from "@/lib/store";
 import Link from "next/link";
-import React from "react";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import * as userAPI from '@/api/user'
 
 const Signup = () => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    name: '',
+    phone: '',
+  })
+  const dispatch = useDispatch()
+  const status = useAppSelector(selectAuthStatus)
+  const errorFromStore = useAppSelector(selectAuthError)
+  const hydrated = useAppSelector(selectAuthHydrated)
+  const token = useAppSelector(selectAuthToken)
+  const router = useRouter()
+  const [success, setSuccess] = useState<string | null>(null)
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [confirmError, setConfirmError] = useState('')
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    if (name === 'password') {
+      // Validate confirm password live when password changes
+      if (confirmPassword && value !== confirmPassword) setConfirmError('Passwords do not match.')
+      else setConfirmError('')
+    }
+  }
+
+  const handleConfirmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setConfirmPassword(value)
+    if (value && value !== formData.password) setConfirmError('Passwords do not match.')
+    else setConfirmError('')
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.email || !formData.password || !formData.name) {
+      dispatch(signUpFailure('Please enter email and password.'))
+      return
+    }
+    if (confirmPassword !== formData.password) {
+      setConfirmError('Passwords do not match.')
+      dispatch(signUpFailure('Passwords do not match.'))
+      return
+    }
+    if (formData.phone && !/^\d{10,15}$/.test(formData.phone)) {
+      dispatch(signUpFailure('Phone number is not valid (10-15 digits).'))
+      return
+    }
+
+    const payload: any = {
+      email: formData.email.trim(),
+      password: formData.password,
+      name: formData.name.trim(),
+      phone: formData.phone.trim(),
+    }
+    try {
+      dispatch(signUpStart())
+      await userAPI.signUp(payload)
+      dispatch(signUpSuccess())
+      setSuccess('Please check your email to verify your account.')
+      setFormData({ email: '', password: '', name: '', phone: '' })
+      setConfirmPassword('')
+      setConfirmError('')
+    } catch (err: any) {
+      const message = err?.message || 'Something went wrong. Please try again.'
+      dispatch(signUpFailure(message))
+    }
+  }
+
+  // Redirect to home if already logged in once hydrated
+  useEffect(() => {
+    if (!hydrated) return
+    if (token) router.replace('/')
+  }, [hydrated, token, router])
+
+  if (!hydrated) return null
   return (
     <>
       <Breadcrumb title={"Signup"} pages={["Signup"]} />
@@ -87,7 +171,7 @@ const Signup = () => {
             </span>
 
             <div className="mt-5.5">
-              <form>
+              <form onSubmit={handleSubmit}>
                 <div className="mb-5">
                   <label htmlFor="name" className="block mb-2.5">
                     Full Name <span className="text-red">*</span>
@@ -97,6 +181,8 @@ const Signup = () => {
                     type="text"
                     name="name"
                     id="name"
+                    value={formData.name}
+                    onChange={handleChange}
                     placeholder="Enter your full name"
                     className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                   />
@@ -111,7 +197,25 @@ const Signup = () => {
                     type="email"
                     name="email"
                     id="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     placeholder="Enter your email address"
+                    className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
+                  />
+                </div>
+
+                <div className="mb-5">
+                  <label htmlFor="phone" className="block mb-2.5">
+                    Phone Number <span className="text-red">*</span>
+                  </label>
+
+                  <input
+                    type="tel"
+                    name="phone"
+                    id="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="Enter your phone number"
                     className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                   />
                 </div>
@@ -125,6 +229,8 @@ const Signup = () => {
                     type="password"
                     name="password"
                     id="password"
+                    value={formData.password}
+                    onChange={handleChange}
                     placeholder="Enter your password"
                     autoComplete="on"
                     className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
@@ -138,19 +244,35 @@ const Signup = () => {
 
                   <input
                     type="password"
-                    name="re-type-password"
+                    name="confirmPassword"
                     id="re-type-password"
+                    value={confirmPassword}
+                    onChange={handleConfirmChange}
                     placeholder="Re-type your password"
                     autoComplete="on"
                     className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                   />
+                  {confirmError && (
+                    <p className="mt-2 text-sm text-red">{confirmError}</p>
+                  )}
                 </div>
-
-                <button
-                  type="submit"
-                  className="w-full flex justify-center font-medium text-white bg-dark py-3 px-6 rounded-lg ease-out duration-200 hover:bg-blue mt-7.5"
-                >
-                  Create Account
+                {success && (
+                  <div className="mt-6 rounded-lg border border-green-light-3 bg-green-light-6 px-4 py-3 text-sm text-green">
+                    {success}
+                  </div>
+                )}
+                {errorFromStore && (
+                  <div className="mt-6 rounded-lg border border-red-light-3 bg-red-light-6 px-4 py-3 text-sm text-red">
+                    <div className="flex">
+                      <svg className="h-4 w-4 text-red-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="ml-2">{errorFromStore}</span>
+                    </div>
+                  </div>
+                )}
+                <button disabled={status === 'loading'} className="w-full flex justify-center font-medium text-white bg-dark py-3 px-6 rounded-lg ease-out duration-200 hover:bg-blue mt-7.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                  {status === 'loading' ? 'Creating...' : 'Create Account'}
                 </button>
 
                 <p className="text-center mt-6">
