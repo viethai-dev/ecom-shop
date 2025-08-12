@@ -10,26 +10,56 @@ export type SignUpPayload = {
 };
 
 export const signIn = async (data: SignInPayload) => {
-  const response = await request("post", "/auth/login", data);
-  return response;
+  try {
+    const response = await request("post", "/auth/login", data);
+    return response;
+  } catch (error) {
+    console.error("Error signing in:", error);
+    throw error;
+  }
 };
 
 export const signUp = async (data: SignUpPayload) => {
-  const response = await request("post", "/auth/register", data);
-  return response;
+  try {
+    const response = await request("post", "/auth/register", data);
+    return response;
+  } catch (error) {
+    console.error("Error signing up:", error);
+    throw error;
+  }
 };
 
 export const signOut = async () => {
-  const response = await request("post", "/auth/logout");
-  return response;
+  try {
+    const response = await request("post", "/auth/logout");
+    return response;
+  } catch (error) {
+    console.error("Error signing out:", error);
+    throw error;
+  }
 };
 
 export const verifyEmail = async (token: string) => {
-  const response = await request("get", `/auth/verify-email?token=${encodeURIComponent(token)}`);
-  return response;
+  try {
+    const response = await request(
+      "get",
+      `/auth/verify-email?token=${encodeURIComponent(token)}`
+    );
+    return response;
+  } catch (error) {
+    console.error("Error verifying email:", error);
+    throw error;
+  }
 };
 
 export const userProfile = async (token: string) => {
-  const response = await request("get", "/auth/me", { headers: { Authorization: `Bearer ${token}` } });
-  return response;
+  try {
+    const response = await request("get", "/auth/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    throw error;
+  }
 };
