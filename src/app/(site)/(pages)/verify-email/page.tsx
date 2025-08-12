@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { verifyEmail } from '@/api/user'
+import { verifyEmail } from '@/api/request'
 import { useDispatch } from 'react-redux'
 import { useAppSelector } from '@/lib/store'
 import { selectVerifyMessage, selectVerifyStatus, selectVerifyLastToken } from '@/lib/features/auth/selectors'
