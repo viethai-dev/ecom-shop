@@ -6,7 +6,7 @@ import Orders from "../Orders";
 import { useAppSelector } from "@/lib/store";
 import { selectAuthUser } from "@/lib/features/auth/selectors";
 import { format } from "date-fns";
-import * as userAPI from "@/api/user";
+import * as userAPI from "@/api/request";
 import { useDispatch } from "react-redux";
 import { signOut } from "@/lib/features/auth/authSlice";
 import { useRouter } from "next/navigation";

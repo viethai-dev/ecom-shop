@@ -1,41 +1,35 @@
-const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '')
+import { request } from "./request";
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-    const res = await fetch(`${BASE_URL}${path}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        ...init,
-    })
-    if (!res.ok) {
-        let message = 'Request failed'
-        try {
-            const data = await res.json()
-            message = (data as any)?.message || (data as any)?.error || (data as any)?.detail || message
-        } catch { }
-        throw new Error(message)
-    }
-    try {
-        return (await res.json()) as T
-    } catch {
-        return undefined as unknown as T
-    }
-}
-
-export type SignInPayload = { email: string; password: string }
+export type SignInPayload = { email: string; password: string };
 export type SignUpPayload = {
-    email: string
-    password: string
-    name: string
-    phone: string
-    avatar_url: string
-}
+  email: string;
+  password: string;
+  name: string;
+  phone: string;
+  avatar_url: string;
+};
 
-export const signIn = (data: SignInPayload) =>request<any>('/auth/login', { method: 'POST', body: JSON.stringify(data) })
+export const signIn = async (data: SignInPayload) => {
+  const response = await request("post", "/auth/login", data);
+  return response;
+};
 
-export const signUp = (data: SignUpPayload) =>request<any>('/auth/register', { method: 'POST', body: JSON.stringify(data) })
+export const signUp = async (data: SignUpPayload) => {
+  const response = await request("post", "/auth/register", data);
+  return response;
+};
 
-export const signOut = () => request<any>('/auth/logout')
+export const signOut = async () => {
+  const response = await request("post", "/auth/logout");
+  return response;
+};
 
-export const verifyEmail = (token: string) => request<any>(`/auth/verify-email?token=${encodeURIComponent(token)}`)
+export const verifyEmail = async (token: string) => {
+  const response = await request("get", `/auth/verify-email?token=${encodeURIComponent(token)}`);
+  return response;
+};
 
-export const userProfile = (token: string ) => request<any>('/auth/me')
+export const userProfile = async (token: string) => {
+  const response = await request("get", "/auth/me", { headers: { Authorization: `Bearer ${token}` } });
+  return response;
+};

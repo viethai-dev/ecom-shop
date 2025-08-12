@@ -1,6 +1,5 @@
 'use client'
 
-import { signIn } from "@/api/user";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import { signInFailure, signInStart, signInSuccess } from "@/lib/features/auth/authSlice";
 import { selectAuthError, selectAuthHydrated, selectAuthStatus, selectAuthToken } from "@/lib/features/auth/selectors";
@@ -32,8 +31,8 @@ const Signin = () => {
     try {
       dispatch(signInStart())
       const res: any = await userAPI.signIn({ ...formData })
-      if (!res?.data?.accessToken) throw new Error('Invalid Token.')
-      if (typeof window !== 'undefined') {
+     
+      if (typeof window !== 'undefined') { if (!res?.data?.accessToken) throw new Error('Invalid Token.')
         localStorage.setItem('access_token', res?.data?.accessToken)
         if (res?.data?.user) localStorage.setItem('user', JSON.stringify(res?.data?.user))
       }
